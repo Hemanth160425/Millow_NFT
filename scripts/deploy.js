@@ -4,10 +4,43 @@
 // You can also run a script with `npx hardhat run <script>`. If you do that, Hardhat
 // will compile your contracts, add the Hardhat Runtime Environment's members to the
 // global scope, and execute the script.
-const hre = require("hardhat");
+const { ethers } = require("hardhat");  
 
-async function main() {
+// Helper function to convert Ether to Wei
+const tokens = (n) => {
+  return ethers.utils.parseEther(n.toString());
+};
 
+async function main() { 
+  [seller , inspector , lender, buyer] = await ethers.getSigners()
+  const RealEstate = await ethers.getContractFactory("RealEstate");
+  const realEstate = await RealEstate.deploy();
+  await realEstate.deployed();
+  console.log("RealEstate deployed to:", realEstate.address);
+  console.log("mining... 3 properties")
+  for(let i = 1 ; i <= 3 ; i++) {
+    const transaction = await realEstate.connect(seller).mint(`https://ipfs.io/ipfs/QmQUozrHLAusXDxrvsESJ3PYB3rUeUuBAvVWw6nop2uu7c/${i}.png`)
+    await transaction.wait()
+    console.log(`Minted property ${i}`);
+  }
+
+  const Escrow = await ethers.getContractFactory("Escrow");
+  const escrow = await Escrow.deploy(realEstate.address, seller.address, inspector.address, lender.address);
+  await escrow.deployed();
+  console.log("Escrow deployed to:", escrow.address);
+
+  for(let i = 1 ; i <= 3 ; i++) {
+    const transaction = await realEstate.connect(seller).approve(escrow.address , i)
+    await transaction.wait()
+    console.log(`Approved property ${i}`);
+  }
+
+  for(let i = 1 ; i <= 3 ; i++) {
+    const transaction = await escrow.connect(seller).list(i , buyer.address , tokens(10) , tokens(5))
+    await transaction.wait()
+    console.log(`Listed property ${i}`);
+  }
+  console.log("Deployment and setup completed successfully!");
 }
 
 // We recommend this pattern to be able to use async/await everywhere
