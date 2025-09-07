@@ -24,7 +24,6 @@ const Home = ({ home, provider, account, escrow, togglePop }) => {
 
         const hasBought = await escrow.approval(home.id, buyer)
         setHasBought(hasBought)
-
         // -- Seller
 
         const seller = await escrow.seller()
@@ -180,8 +179,6 @@ const Home = ({ home, provider, account, escrow, togglePop }) => {
                         ))}
                     </ul>
                 </div>
-
-
                 <button onClick={togglePop} className="home__close">
                     <img src={close} alt="Close" />
                 </button>
